@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>产品展示工具</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0D1B2A;
+    --bg2: #112236;
+    --glass: rgba(255,255,255,0.05);
+    --glass-border: rgba(255,255,255,0.10);
+    --text: #E8F4F8;
+    --text-dim: #8BAFC4;
+    --accent: #F5A623;
+    --accent2: #E8913A;
+    --danger: #E05C5C;
+    --success: #4ECDC4;
+    --radius: 16px;
+    --shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BG GRID ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── LAYOUT ── */
+  #app { position: relative; z-index: 1; }
+
+  header {
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    background: rgba(13,27,42,0.8);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+
+  .logo span { color: var(--text); font-style: italic; }
+
+  .header-actions { display: flex; gap: 12px; align-items: center; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  .tab-btn {
+    padding: 8px 18px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active {
+    background: var(--accent);
+    color: #0D1B2A;
+    font-weight: 700;
+  }
+
+  /* ── PANELS ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── EDITOR PANEL ── */
+  .editor-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    min-height: calc(100vh - 73px);
+  }
+
+  .sidebar {
+    background: var(--bg2);
+    border-right: 1px solid var(--glass-border);
+    padding: 28px 24px;
+    overflow-y: auto;
+    max-height: calc(100vh - 73px);
+  }
+
+  .sidebar-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .form-group { margin-bottom: 18px; }
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    letter-spacing: 0.03em;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="url"],
+  textarea,
+  select {
+    width: 100%;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(245,166,35,0.15);
+  }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  select option { background: #1a2f45; }
+
+  .color-row { display: flex; gap: 8px; align-items: center; }
+
+  input[type="color"] {
+    width: 44px;
+    height: 38px;
+    padding: 2px;
+    border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── TAGS ── */
+  .tags-input-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    min-height: 44px;
+    align-items: center;
+    cursor: text;
+  }
+
+  .tags-input-wrap.focused { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
+
+  .tag-chip {
+    background: rgba(245,166,35,0.18);
+    border: 1px solid rgba(245,166,35,0.35);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .tag-chip button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+
+  #tagInput {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    flex: 1;
+    min-width: 80px;
+    padding: 2px 0;
+  }
+
+  /* ── IMAGE UPLOAD ── */
+  .img-upload-area {
+    border: 2px dashed var(--glass-border);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--glass);
+  }
+
+  .img-upload-area:hover, .img-upload-area.drag-over {
+    border-color: var(--accent);
+    background: rgba(245,166,35,0.06);
+  }
+
+  .img-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .img-thumb {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+  }
+
+  .img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .img-thumb .remove-img {
+    position: absolute;
+    top: 4px; right: 4px;
+    background: rgba(13,27,42,0.85);
+    border: none;
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--danger);
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .img-thumb:hover .remove-img { opacity: 1; }
+
+  .img-thumb.main-img::after {
+    content: 'MAIN';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(245,166,35,0.85);
+    color: #0D1B2A;
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-align: center;
+    padding: 2px;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-decoration: none;
+  }
+
+  .btn-primary { background: var(--accent); color: #0D1B2A; }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+  .btn-danger { background: rgba(224,92,92,0.15); border: 1px solid rgba(224,92,92,0.3); color: var(--danger); }
+  .btn-danger:hover { background: rgba(224,92,92,0.25); }
+
+  .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* ── PRODUCT LIST ── */
+  .product-list-wrap { padding: 0 0 24px; }
+
+  .product-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 0 4px;
+  }
+
+  .product-list-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .product-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.18s;
+    margin-bottom: 6px;
+  }
+
+  .product-item:hover { background: var(--glass); border-color: var(--glass-border); }
+  .product-item.selected { background: rgba(245,166,35,0.1); border-color: rgba(245,166,35,0.35); }
+
+  .product-item-thumb {
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+  }
+
+  .product-item-info { flex: 1; min-width: 0; }
+
+  .product-item-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .product-item-price {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .product-item-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.18s; }
+  .product-item:hover .product-item-actions { opacity: 1; }
+
+  .icon-btn {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.9rem;
+    background: var(--glass);
+    color: var(--text-dim);
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+  .icon-btn.del:hover { background: rgba(224,92,92,0.18); color: var(--danger); }
+
+  /* ── PREVIEW AREA ── */
+  .preview-area {
+    padding: 40px;
+    overflow-y: auto;
+    max-height: calc(100vh - 73px);
+  }
+
+  .form-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 28px;
+    backdrop-filter: blur(12px);
+  }
+
+  .form-card + .form-card { margin-top: 20px; }
+
+  .card-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--glass-border);
+  }
+
+  /* ── SHOWCASE PANEL ── */
+  #showcasePanel {
+    padding: 0;
+  }
+
+  /* Showcase config bar */
+  .showcase-config {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 40px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--glass-border);
+    flex-wrap: wrap;
+  }
+
+  .config-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .layout-btns { display: flex; gap: 4px; }
+
+  .layout-btn {
+    width: 34px; height: 34px;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    background: var(--glass);
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    transition: all 0.15s;
+  }
+
+  .layout-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(245,166,35,0.1); }
+
+  .sort-select {
+    padding: 7px 12px;
+    font-size: 0.8rem;
+  }
+
+  .filter-tags {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+
+  .filter-tag {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-tag.active { border-color: var(--accent); color: var(--accent); background: rgba(245,166,35,0.1); }
+
+  /* Showcase canvas */
+  .showcase-canvas {
+    padding: 40px;
+    overflow-y: auto;
+  }
+
+  /* Showcase header */
+  .store-hero {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .store-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 12px;
+  }
+
+  .store-tagline {
+    font-size: 1.05rem;
+    color: var(--text-dim);
+    font-weight: 300;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* Product grid */
+  .product-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .product-grid.layout-2 { grid-template-columns: repeat(2, 1fr); }
+  .product-grid.layout-3 { grid-template-columns: repeat(3, 1fr); }
+  .product-grid.layout-4 { grid-template-columns: repeat(4, 1fr); }
+  .product-grid.layout-list { grid-template-columns: 1fr; }
+
+  /* Product card */
+  .product-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform 0.1s, box-shadow 0.2s;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    will-change: transform;
+    position: relative;
+  }
+
+  .product-card:hover { box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,166,35,0.2); }
+
+  .card-badge {
+    position: absolute;
+    top: 14px; left: 14px;
+    background: var(--accent);
+    color: #0D1B2A;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    z-index: 2;
+  }
+
+  .card-img-wrap {
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    background: rgba(255,255,255,0.03);
+    position: relative;
+  }
+
+  .card-img-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+
+  .product-card:hover .card-img-wrap img { transform: scale(1.04); }
+
+  .card-no-img {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem;
+    opacity: 0.18;
+    color: var(--text);
+  }
+
+  .card-body { padding: 20px; }
+
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+
+  .card-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(78,205,196,0.12);
+    border: 1px solid rgba(78,205,196,0.25);
+    color: var(--success);
+  }
+
+  .card-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .card-desc {
+    font-size: 0.83rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .card-price {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .price-orig {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-decoration: line-through;
+  }
+
+  .price-main {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .card-stock {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 5px;
+  }
+
+  .stock-in { background: rgba(78,205,196,0.12); color: var(--success); border: 1px solid rgba(78,205,196,0.25); }
+  .stock-low { background: rgba(245,166,35,0.12); color: var(--accent); border: 1px solid rgba(245,166,35,0.25); }
+  .stock-out { background: rgba(224,92,92,0.12); color: var(--danger); border: 1px solid rgba(224,92,92,0.25); }
+
+  /* List layout card */
+  .product-grid.layout-list .product-card { display: flex; }
+  .product-grid.layout-list .card-img-wrap { width: 200px; flex-shrink: 0; aspect-ratio: auto; }
+  .product-grid.layout-list .card-body { flex: 1; display: flex; flex-direction: column; }
+  .product-grid.layout-list .card-desc { -webkit-line-clamp: 4; flex: 1; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13,27,42,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: #112236;
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    max-width: 760px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.25s;
+    box-shadow: var(--shadow);
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+  .modal-header {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .modal-img-gallery { flex-shrink: 0; }
+
+  .modal-main-img {
+    width: 260px; height: 200px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: var(--glass);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .modal-thumbs { display: flex; gap: 6px; }
+
+  .modal-thumb {
+    width: 50px; height: 50px;
+    border-radius: 7px;
+    object-fit: cover;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .modal-thumb.active { border-color: var(--accent); }
+
+  .modal-info { flex: 1; }
+
+  .modal-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+
+  .modal-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+
+  .modal-sku {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  .modal-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .modal-price { font-size: 2.2rem; font-weight: 800; color: var(--accent); letter-spacing: -0.03em; }
+  .modal-orig { font-size: 1rem; color: var(--text-dim); text-decoration: line-through; }
+
+  .modal-body {
+    padding: 24px 28px;
+  }
+
+  .modal-desc {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .modal-specs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .spec-item {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+
+  .spec-key { font-size: 0.7rem; color: var(--text-dim); font-weight: 600; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .spec-val { font-size: 0.9rem; font-weight: 600; }
+
+  .modal-close {
+    position: absolute;
+    top: 18px; right: 18px;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.15s;
+    z-index: 5;
+  }
+
+  .modal-close:hover { background: rgba(224,92,92,0.18); color: var(--danger); border-color: rgba(224,92,92,0.3); }
+
+  /* ── SETTINGS PANEL ── */
+  .settings-layout {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .settings-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+
+  .settings-sub {
+    color: var(--text-dim);
+    margin-bottom: 36px;
+    font-size: 0.9rem;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-dim);
+  }
+
+  .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.4; }
+  .empty-title { font-family: 'DM Serif Display', serif; font-size: 1.6rem; margin-bottom: 8px; color: var(--text); opacity: 0.7; }
+  .empty-sub { font-size: 0.875rem; line-height: 1.6; }
+
+  /* ── TOAST ── */
+  .toast-wrap {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: #1e3450;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.5s forwards;
+    max-width: 320px;
+    box-shadow: var(--shadow);
+  }
+
+  .toast.success { border-color: rgba(78,205,196,0.4); }
+  .toast.error { border-color: rgba(224,92,92,0.4); }
+
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes fadeOut { to { opacity: 0; transform: translateX(20px); } }
+
+  /* ── DRAG HANDLE ── */
+  .drag-handle { cursor: grab; color: var(--text-dim); font-size: 0.85rem; }
+  .drag-handle:active { cursor: grabbing; }
+
+  /* ── RANGE ── */
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--glass-border);
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: none;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    header { padding: 16px 20px; }
+    .editor-layout { grid-template-columns: 1fr; }
+    .sidebar { max-height: none; }
+    .preview-area { padding: 20px; }
+    .showcase-canvas { padding: 20px; }
+    .showcase-config { padding: 12px 20px; }
+    .product-grid.layout-4 { grid-template-columns: repeat(2, 1fr); }
+    .modal-header { flex-direction: column; }
+    .modal-main-img { width: 100%; height: 220px; }
+    .product-grid.layout-list .card-img-wrap { width: 140px; }
+  }
+
+  /* ── STARS ── */
+  .stars { display: flex; gap: 2px; font-size: 0.85rem; margin-bottom: 8px; }
+  .star { color: rgba(245,166,35,0.25); }
+  .star.lit { color: var(--accent); }
+
+  /* ── RATING INPUT ── */
+  .rating-input { display: flex; gap: 6px; }
+  .rating-star-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 1.4rem; color: rgba(245,166,35,0.25);
+    padding: 0; transition: color 0.15s;
+  }
+  .rating-star-btn.lit, .rating-star-btn:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo" id="logoDisplay">产品<span>展示</span></div>
+    <div class="header-actions">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="editor">✏️ 编辑</button>
+        <button class="tab-btn" data-tab="showcase">🛍 展示</button>
+        <button class="tab-btn" data-tab="settings">⚙️ 设定</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ EDITOR PANEL ══ -->
+  <div id="editorPanel" class="panel active">
+    <div class="editor-layout">
+
+      <!-- Sidebar: Product List -->
+      <div class="sidebar">
+        <div class="product-list-wrap">
+          <div class="product-list-header">
+            <div class="product-list-title">我的产品</div>
+            <button class="btn btn-primary btn-sm" id="newProductBtn">＋ 新增</button>
+          </div>
+          <div id="productList"></div>
+        </div>
+      </div>
+
+      <!-- Preview: Edit Form -->
+      <div class="preview-area" id="editFormArea">
+        <div class="empty-state" id="emptyFormState">
+          <div class="empty-icon">📦</div>
+          <div class="empty-title">选择或新增产品</div>
+          <div class="empty-sub">从左侧选择产品进行编辑<br>或点击「＋ 新增」建立第一个产品</div>
+        </div>
+        <div id="editForm" style="display:none;">
+          <!-- Basic Info -->
+          <div class="form-card">
+            <div class="card-section-title">基本资料</div>
+            <div class="form-group">
+              <label>产品名称 *</label>
+              <input type="text" id="f_name" placeholder="例：经典皮革托特包">
+            </div>
+            <div class="form-group">
+              <label>品牌 / 系列</label>
+              <input type="text" id="f_brand" placeholder="例：LUXE Collection">
+            </div>
+            <div class="form-group">
+              <label>产品描述</label>
+              <textarea id="f_desc" placeholder="描述产品特色、使用方式、材质…" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+              <label>分类标签（输入后按 Enter）</label>
+              <div class="tags-input-wrap" id="tagsWrap">
+                <div id="tagChips"></div>
+                <input type="text" id="tagInput" placeholder="输入标签…">
+              </div>
+            </div>
+          </div>
+
+          <!-- Images -->
+          <div class="form-card">
+            <div class="card-section-title">产品图片</div>
+            <div class="img-upload-area" id="imgUploadArea">
+              <div style="font-size:2rem;margin-bottom:8px;">🖼</div>
+              <div style="font-size:0.85rem;font-weight:600;margin-bottom:4px;">拖曳图片至此，或点击上传</div>
+              <div style="font-size:0.75rem;color:var(--text-dim);">支援 JPG、PNG、GIF、WebP</div>
+              <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none">
+            </div>
+            <div class="img-preview-grid" id="imgPreviewGrid"></div>
+            <div style="margin-top:10px;">
+              <label>或贴上图片网址</label>
+              <div style="display:flex;gap:8px;margin-top:6px;">
+                <input type="url" id="imgUrlInput" placeholder="https://...">
+                <button class="btn btn-ghost btn-sm" id="addImgUrlBtn">加入</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pricing -->
+          <div class="form-card">
+            <div class="card-section-title">价格与库存</div>
+            <div class="row2">
+              <div class="form-group">
+                <label>售价 *</label>
+                <input type="number" id="f_price" placeholder="0" min="0" step="0.01">
+              </div>
+              <div class="form-group">
+                <label>原价（折扣用）</label>
+                <input type="number" id="f_orig" placeholder="0" min="0" step="0.01">
+              </div>
+            </div>
+            <div class="row2">
+              <div class="form-group">
+                <label>货币</label>
+                <select id="f_currency">
+                  <option value="NT$">NT$（新台币）</option>
+                  <option value="¥">¥（人民币）</option>
+                  <option value="$">$（美元）</option>
+                  <option value="HK$">HK$（港币）</option>
+                  <option value="£">£（英镑）</option>
+                  <option value="€">€（欧元）</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>库存状态</label>
+                <select id="f_stock">
+                  <option value="in">充足</option>
+                  <option value="low">快售完</option>
+                  <option value="out">已售完</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>SKU / 货号</label>
+              <input type="text" id="f_sku" placeholder="例：LX-TOTE-001">
+            </div>
+          </div>
+
+          <!-- Details -->
+          <div class="form-card">
+            <div class="card-section-title">规格细节</div>
+            <div class="row2">
+              <div class="form-group">
+                <label>材质</label>
+                <input type="text" id="f_material" placeholder="例：真皮、棉麻">
+              </div>
+              <div class="form-group">
+                <label>尺寸 / 重量</label>
+                <input type="text" id="f_size" placeholder="例：30×20×10 cm">
+              </div>
+            </div>
+            <div class="row2">
+              <div class="form-group">
+                <label>颜色</label>
+                <input type="text" id="f_color" placeholder="例：深棕、米白">
+              </div>
+              <div class="form-group">
+                <label>产地</label>
+                <input type="text" id="f_origin" placeholder="例：台湾制造">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>评分</label>
+              <div class="rating-input" id="ratingInput">
+                <button class="rating-star-btn" data-v="1">★</button>
+                <button class="rating-star-btn" data-v="2">★</button>
+                <button class="rating-star-btn" data-v="3">★</button>
+                <button class="rating-star-btn" data-v="4">★</button>
+                <button class="rating-star-btn" data-v="5">★</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>特别标签（促销徽章）</label>
+              <select id="f_badge">
+                <option value="">无</option>
+                <option value="NEW">NEW</option>
+                <option value="HOT">HOT</option>
+                <option value="SALE">SALE</option>
+                <option value="限定">限定</option>
+                <option value="热卖">热卖</option>
+                <option value="推荐">推荐</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Save -->
+          <div style="display:flex;gap:12px;margin-top:24px;justify-content:flex-end;">
+            <button class="btn btn-danger" id="deleteProductBtn">🗑 删除产品</button>
+            <button class="btn btn-ghost" id="cancelEditBtn">取消</button>
+            <button class="btn btn-primary" id="saveProductBtn">✓ 储存产品</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SHOWCASE PANEL ══ -->
+  <div id="showcasePanel" class="panel">
+    <div class="showcase-config">
+      <div class="config-label">版型</div>
+      <div class="layout-btns">
+        <button class="layout-btn active" data-layout="auto" title="自动">⊞</button>
+        <button class="layout-btn" data-layout="layout-2" title="2栏">▦</button>
+        <button class="layout-btn" data-layout="layout-3" title="3栏">⊟</button>
+        <button class="layout-btn" data-layout="layout-4" title="4栏">▤</button>
+        <button class="layout-btn" data-layout="layout-list" title="列表">☰</button>
+      </div>
+      <div class="config-label" style="margin-left:8px;">排序</div>
+      <select class="sort-select" id="sortSelect" style="width:auto;">
+        <option value="default">预设</option>
+        <option value="price-asc">价格低到高</option>
+        <option value="price-desc">价格高到低</option>
+        <option value="name-asc">名称 A→Z</option>
+        <option value="rating">评分最高</option>
+      </select>
+      <div class="config-label" style="margin-left:8px;">筛选</div>
+      <div class="filter-tags" id="filterTagsWrap">
+        <button class="filter-tag active" data-tag="all">全部</button>
+      </div>
+    </div>
+    <div class="showcase-canvas">
+      <div class="store-hero">
+        <div class="store-name" id="storeNameDisplay">产品展示</div>
+        <div class="store-tagline" id="storeTaglineDisplay">精选商品，等你探索</div>
+      </div>
+      <div class="product-grid" id="productGrid"></div>
+      <div class="empty-state" id="showcaseEmpty" style="display:none;">
+        <div class="empty-icon">🛍</div>
+        <div class="empty-title">还没有产品</div>
+        <div class="empty-sub">前往「编辑」分页新增你的第一个产品</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS PANEL ══ -->
+  <div id="settingsPanel" class="panel">
+    <div class="settings-layout">
+      <div class="settings-title">展示设定</div>
+      <div class="settings-sub">自定义你的产品展示页面外观与资讯</div>
+
+      <div class="form-card">
+        <div class="card-section-title">品牌资讯</div>
+        <div class="form-group">
+          <label>店名 / 品牌名称</label>
+          <input type="text" id="s_storeName" placeholder="我的精品店">
+        </div>
+        <div class="form-group">
+          <label>品牌标语</label>
+          <input type="text" id="s_tagline" placeholder="精选商品，等你探索">
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="card-section-title">外观主题</div>
+        <div class="form-group">
+          <label>强调色</label>
+          <div class="color-row">
+            <input type="color" id="s_accent" value="#F5A623">
+            <input type="text" id="s_accentHex" value="#F5A623" style="flex:1;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>背景色</label>
+          <div class="color-row">
+            <input type="color" id="s_bg" value="#0D1B2A">
+            <input type="text" id="s_bgHex" value="#0D1B2A" style="flex:1;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>卡片圆角</label>
+          <input type="range" id="s_radius" min="0" max="32" value="16">
+          <div style="text-align:right;font-size:0.75rem;color:var(--text-dim);margin-top:4px;" id="radiusLabel">16px</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="card-section-title">资料管理</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="exportBtn">📤 汇出 JSON</button>
+          <button class="btn btn-ghost" id="importBtnTrig">📥 汇入 JSON</button>
+          <button class="btn btn-danger" id="clearAllBtn">🗑 清除全部资料</button>
+          <input type="file" id="importInput" accept=".json" style="display:none">
+        </div>
+      </div>
+
+      <div style="margin-top:24px;text-align:right;">
+        <button class="btn btn-primary" id="saveSettingsBtn">✓ 储存设定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="productModal" style="position:relative;">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-header" id="modalHeader"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+let state = {
+  products: [],
+  settings: {
+    storeName: '产品展示',
+    tagline: '精选商品，等你探索',
+    accent: '#F5A623',
+    bg: '#0D1B2A',
+    radius: 16
+  },
+  selectedId: null,
+  tags: [],
+  images: [],
+  rating: 0,
+  activeLayout: 'auto',
+  activeFilter: 'all',
+  activeSort: 'default',
+  modalProduct: null,
+  modalImgIdx: 0
+};
+
+// ══════════════════════════════════════════
+//  STORAGE
+// ══════════════════════════════════════════
+function save() {
+  try {
+    localStorage.setItem('showcase_products', JSON.stringify(state.products));
+    localStorage.setItem('showcase_settings', JSON.stringify(state.settings));
+  } catch(e) {}
+}
+
+function load() {
+  try {
+    const p = localStorage.getItem('showcase_products');
+    const s = localStorage.getItem('showcase_settings');
+    if (p) state.products = JSON.parse(p);
+    if (s) state.settings = Object.assign(state.settings, JSON.parse(s));
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = (type === 'success' ? '✓' : '✕') + ' ' + msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function formatPrice(price, currency) {
+  const n = parseFloat(price);
+  if (isNaN(n)) return '';
+  return currency + n.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function stockLabel(v) {
+  return { in: '库存充足', low: '快售完', out: '已售完' }[v] || '';
+}
+function stockClass(v) {
+  return { in: 'stock-in', low: 'stock-low', out: 'stock-out' }[v] || 'stock-in';
+}
+
+function starsHTML(r) {
+  let h = '<div class="stars">';
+  for (let i = 1; i <= 5; i++) h += `<span class="star${i <= r ? ' lit' : ''}">★</span>`;
+  return h + '</div>';
+}
+
+function applyTheme() {
+  const s = state.settings;
+  document.documentElement.style.setProperty('--accent', s.accent);
+  document.documentElement.style.setProperty('--bg', s.bg);
+  document.documentElement.style.setProperty('--radius', s.radius + 'px');
+  document.getElementById('logoDisplay').innerHTML = s.storeName ? s.storeName.slice(0,2) + '<span>' + s.storeName.slice(2) + '</span>' : '产品<span>展示</span>';
+  document.getElementById('storeNameDisplay').textContent = s.storeName || '产品展示';
+  document.getElementById('storeTaglineDisplay').textContent = s.tagline || '';
+}
+
+// ══════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(tab + 'Panel').classList.add('active');
+    if (tab === 'showcase') renderShowcase();
+    if (tab === 'settings') loadSettingsForm();
+  });
+});
+
+// ══════════════════════════════════════════
+//  PRODUCT LIST (sidebar)
+// ══════════════════════════════════════════
+function renderProductList() {
+  const list = document.getElementById('productList');
+  if (state.products.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="padding:40px 0;"><div class="empty-icon" style="font-size:2rem;">📦</div><div style="font-size:0.8rem;color:var(--text-dim);text-align:center;margin-top:8px;">还没有产品</div></div>';
+    return;
+  }
+  list.innerHTML = state.products.map(p => `
+    <div class="product-item ${p.id === state.selectedId ? 'selected' : ''}" data-id="${p.id}">
+      <img class="product-item-thumb" src="${p.images[0] || ''}" onerror="this.src=''" alt="">
+      <div class="product-item-info">
+        <div class="product-item-name">${p.name || '未命名产品'}</div>
+        <div class="product-item-price">${p.currency}${parseFloat(p.price || 0).toLocaleString()}</div>
+      </div>
+      <div class="product-item-actions">
+        <button class="icon-btn del" data-del="${p.id}" title="删除">🗑</button>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.product-item').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-del]')) return;
+      selectProduct(el.dataset.id);
+    });
+  });
+
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      deleteProduct(btn.dataset.del);
+    });
+  });
+}
+
+// ══════════════════════════════════════════
+//  SELECT / EDIT PRODUCT
+// ══════════════════════════════════════════
+function selectProduct(id) {
+  state.selectedId = id;
+  const p = state.products.find(x => x.id === id);
+  if (!p) return;
+  renderProductList();
+  state.tags = [...(p.tags || [])];
+  state.images = [...(p.images || [])];
+  state.rating = p.rating || 0;
+  loadForm(p);
+  document.getElementById('emptyFormState').style.display = 'none';
+  document.getElementById('editForm').style.display = 'block';
+}
+
+function loadForm(p) {
+  document.getElementById('f_name').value = p.name || '';
+  document.getElementById('f_brand').value = p.brand || '';
+  document.getElementById('f_desc').value = p.desc || '';
+  document.getElementById('f_price').value = p.price || '';
+  document.getElementById('f_orig').value = p.orig || '';
+  document.getElementById('f_currency').value = p.currency || 'NT$';
+  document.getElementById('f_stock').value = p.stock || 'in';
+  document.getElementById('f_sku').value = p.sku || '';
+  document.getElementById('f_material').value = p.material || '';
+  document.getElementById('f_size').value = p.size || '';
+  document.getElementById('f_color').value = p.color || '';
+  document.getElementById('f_origin').value = p.origin || '';
+  document.getElementById('f_badge').value = p.badge || '';
+  renderTagChips();
+  renderImgPreviews();
+  renderRatingInput();
+}
+
+function getFormData() {
+  return {
+    name: document.getElementById('f_name').value.trim(),
+    brand: document.getElementById('f_brand').value.trim(),
+    desc: document.getElementById('f_desc').value.trim(),
+    price: document.getElementById('f_price').value,
+    orig: document.getElementById('f_orig').value,
+    currency: document.getElementById('f_currency').value,
+    stock: document.getElementById('f_stock').value,
+    sku: document.getElementById('f_sku').value.trim(),
+    material: document.getElementById('f_material').value.trim(),
+    size: document.getElementById('f_size').value.trim(),
+    color: document.getElementById('f_color').value.trim(),
+    origin: document.getElementById('f_origin').value.trim(),
+    badge: document.getElementById('f_badge').value,
+    tags: [...state.tags],
+    images: [...state.images],
+    rating: state.rating
+  };
+}
+
+// ══════════════════════════════════════════
+//  NEW / SAVE / DELETE
+// ══════════════════════════════════════════
+document.getElementById('newProductBtn').addEventListener('click', () => {
+  const newP = {
+    id: uid(), name: '', brand: '', desc: '',
+    price: '', orig: '', currency: 'NT$', stock: 'in',
+    sku: '', material: '', size: '', color: '', origin: '',
+    badge: '', tags: [], images: [], rating: 0
+  };
+  state.products.unshift(newP);
+  save();
+  renderProductList();
+  selectProduct(newP.id);
+  toast('已建立新产品');
+});
+
+document.getElementById('saveProductBtn').addEventListener('click', () => {
+  if (!state.selectedId) return;
+  const idx = state.products.findIndex(p => p.id === state.selectedId);
+  if (idx === -1) return;
+  if (!document.getElementById('f_name').value.trim()) {
+    toast('请输入产品名称', 'error'); return;
+  }
+  state.products[idx] = Object.assign(state.products[idx], getFormData());
+  save();
+  renderProductList();
+  toast('产品已储存');
+});
+
+document.getElementById('deleteProductBtn').addEventListener('click', () => {
+  if (!state.selectedId) return;
+  deleteProduct(state.selectedId);
+});
+
+document.getElementById('cancelEditBtn').addEventListener('click', () => {
+  state.selectedId = null;
+  document.getElementById('emptyFormState').style.display = '';
+  document.getElementById('editForm').style.display = 'none';
+  renderProductList();
+});
+
+function deleteProduct(id) {
+  state.products = state.products.filter(p => p.id !== id);
+  if (state.selectedId === id) {
+    state.selectedId = null;
+    document.getElementById('emptyFormState').style.display = '';
+    document.getElementById('editForm').style.display = 'none';
+  }
+  save();
+  renderProductList();
+  toast('产品已删除');
+}
+
+// ══════════════════════════════════════════
+//  TAGS
+// ══════════════════════════════════════════
+function renderTagChips() {
+  const wrap = document.getElementById('tagChips');
+  wrap.innerHTML = state.tags.map((t, i) => `
+    <div class="tag-chip">${t}<button data-idx="${i}">×</button></div>
+  `).join('');
+  wrap.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.tags.splice(parseInt(btn.dataset.idx), 1);
+      renderTagChips();
+    });
+  });
+}
+
+const tagInput = document.getElementById('tagInput');
+const tagsWrap = document.getElementById('tagsWrap');
+
+tagsWrap.addEventListener('click', () => tagInput.focus());
+tagInput.addEventListener('focus', () => tagsWrap.classList.add('focused'));
+tagInput.addEventListener('blur', () => tagsWrap.classList.remove('focused'));
+tagInput.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ',') && tagInput.value.trim()) {
+    e.preventDefault();
+    const tag = tagInput.value.trim().replace(/,/g, '');
+    if (tag && !state.tags.includes(tag)) { state.tags.push(tag); renderTagChips(); }
+    tagInput.value = '';
+  }
+  if (e.key === 'Backspace' && !tagInput.value && state.tags.length) {
+    state.tags.pop(); renderTagChips();
+  }
+});
+
+// ══════════════════════════════════════════
+//  IMAGES
+// ══════════════════════════════════════════
+function renderImgPreviews() {
+  const grid = document.getElementById('imgPreviewGrid');
+  grid.innerHTML = state.images.map((src, i) => `
+    <div class="img-thumb ${i === 0 ? 'main-img' : ''}">
+      <img src="${src}" alt="">
+      <button class="remove-img" data-idx="${i}">×</button>
+    </div>
+  `).join('');
+  grid.querySelectorAll('.remove-img').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.images.splice(parseInt(btn.dataset.idx), 1);
+      renderImgPreviews();
+    });
+  });
+}
+
+const imgUploadArea = document.getElementById('imgUploadArea');
+const imgFileInput = document.getElementById('imgFileInput');
+
+imgUploadArea.addEventListener('click', () => imgFileInput.click());
+
+imgUploadArea.addEventListener('dragover', e => { e.preventDefault(); imgUploadArea.classList.add('drag-over'); });
+imgUploadArea.addEventListener('dragleave', () => imgUploadArea.classList.remove('drag-over'));
+imgUploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  imgUploadArea.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+
+imgFileInput.addEventListener('change', () => handleFiles(imgFileInput.files));
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => { state.images.push(e.target.result); renderImgPreviews(); };
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('addImgUrlBtn').addEventListener('click', () => {
+  const url = document.getElementById('imgUrlInput').value.trim();
+  if (!url) return;
+  state.images.push(url);
+  renderImgPreviews();
+  document.getElementById('imgUrlInput').value = '';
+});
+
+// ══════════════════════════════════════════
+//  RATING
+// ══════════════════════════════════════════
+function renderRatingInput() {
+  document.querySelectorAll('.rating-star-btn').forEach(btn => {
+    btn.classList.toggle('lit', parseInt(btn.dataset.v) <= state.rating);
+  });
+}
+
+document.getElementById('ratingInput').addEventListener('click', e => {
+  const btn = e.target.closest('.rating-star-btn');
+  if (!btn) return;
+  state.rating = parseInt(btn.dataset.v);
+  renderRatingInput();
+});
+
+// ══════════════════════════════════════════
+//  SHOWCASE
+// ══════════════════════════════════════════
+document.querySelectorAll('.layout-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.activeLayout = btn.dataset.layout;
+    renderShowcase();
+  });
+});
+
+document.getElementById('sortSelect').addEventListener('change', e => {
+  state.activeSort = e.target.value;
+  renderShowcase();
+});
+
+function buildFilterTags() {
+  const all = new Set();
+  state.products.forEach(p => (p.tags || []).forEach(t => all.add(t)));
+  const wrap = document.getElementById('filterTagsWrap');
+  wrap.innerHTML = '<button class="filter-tag active" data-tag="all">全部</button>' +
+    [...all].map(t => `<button class="filter-tag" data-tag="${t}">${t}</button>`).join('');
+  wrap.querySelectorAll('.filter-tag').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('.filter-tag').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeFilter = btn.dataset.tag;
+      renderShowcase();
+    });
+  });
+}
+
+function renderShowcase() {
+  buildFilterTags();
+  const wrap = document.getElementById('filterTagsWrap');
+  wrap.querySelectorAll('.filter-tag').forEach(b => {
+    b.classList.toggle('active', b.dataset.tag === state.activeFilter);
+  });
+
+  let products = [...state.products];
+
+  if (state.activeFilter !== 'all') {
+    products = products.filter(p => (p.tags || []).includes(state.activeFilter));
+  }
+
+  switch (state.activeSort) {
+    case 'price-asc': products.sort((a, b) => parseFloat(a.price || 0) - parseFloat(b.price || 0)); break;
+    case 'price-desc': products.sort((a, b) => parseFloat(b.price || 0) - parseFloat(a.price || 0)); break;
+    case 'name-asc': products.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'zh')); break;
+    case 'rating': products.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
+  }
+
+  const grid = document.getElementById('productGrid');
+  const empty = document.getElementById('showcaseEmpty');
+
+  grid.className = 'product-grid' + (state.activeLayout !== 'auto' ? ' ' + state.activeLayout : '');
+
+  if (products.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  grid.innerHTML = products.map(p => {
+    const img = p.images && p.images[0];
+    const hasOrig = p.orig && parseFloat(p.orig) > parseFloat(p.price || 0);
+    return `
+      <div class="product-card" data-id="${p.id}">
+        ${p.badge ? `<div class="card-badge">${p.badge}</div>` : ''}
+        <div class="card-img-wrap">
+          ${img
+            ? `<img src="${img}" alt="${p.name}">`
+            : `<div class="card-no-img">📦</div>`
+          }
+        </div>
+        <div class="card-body">
+          ${p.tags && p.tags.length ? `<div class="card-tags">${p.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>` : ''}
+          ${p.rating ? starsHTML(p.rating) : ''}
+          <div class="card-name">${p.name || '未命名产品'}</div>
+          ${p.desc ? `<div class="card-desc">${p.desc}</div>` : ''}
+          <div class="card-footer">
+            <div class="card-price">
+              ${hasOrig ? `<div class="price-orig">${formatPrice(p.orig, p.currency)}</div>` : ''}
+              <div class="price-main">${formatPrice(p.price, p.currency)}</div>
+            </div>
+            <span class="card-stock ${stockClass(p.stock)}">${stockLabel(p.stock)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  grid.querySelectorAll('.product-card').forEach(card => {
+    // 3D tilt effect
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (e.clientX - cx) / (rect.width / 2);
+      const dy = (e.clientY - cy) / (rect.height / 2);
+      card.style.transform = `perspective(800px) rotateY(${dx * 6}deg) rotateX(${-dy * 6}deg) scale(1.02)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+    card.addEventListener('click', () => {
+      openModal(card.dataset.id);
+    });
+  });
+}
+
+// ══════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════
+function openModal(id) {
+  const p = state.products.find(x => x.id === id);
+  if (!p) return;
+  state.modalProduct = p;
+  state.modalImgIdx = 0;
+  renderModal();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function renderModal() {
+  const p = state.modalProduct;
+  if (!p) return;
+  const hasOrig = p.orig && parseFloat(p.orig) > parseFloat(p.price || 0);
+  const imgs = p.images && p.images.length ? p.images : [];
+  const mainSrc = imgs[state.modalImgIdx] || '';
+
+  document.getElementById('modalHeader').innerHTML = `
+    <div class="modal-img-gallery">
+      ${mainSrc
+        ? `<img class="modal-main-img" id="modalMainImg" src="${mainSrc}" alt="${p.name}">`
+        : `<div class="modal-main-img" style="display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:.2;">📦</div>`
+      }
+      ${imgs.length > 1 ? `<div class="modal-thumbs">${imgs.map((src, i) =>
+        `<img class="modal-thumb ${i === state.modalImgIdx ? 'active' : ''}" src="${src}" data-idx="${i}" alt="">`
+      ).join('')}</div>` : ''}
+    </div>
+    <div class="modal-info">
+      ${p.tags && p.tags.length ? `<div class="modal-tags">${p.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>` : ''}
+      ${p.rating ? starsHTML(p.rating) : ''}
+      <div class="modal-name">${p.name || '未命名产品'}</div>
+      ${p.brand ? `<div class="modal-sku">品牌：${p.brand}</div>` : ''}
+      ${p.sku ? `<div class="modal-sku">SKU：${p.sku}</div>` : ''}
+      <div class="modal-price-row">
+        <div class="modal-price">${formatPrice(p.price, p.currency)}</div>
+        ${hasOrig ? `<div class="modal-orig">${formatPrice(p.orig, p.currency)}</div>` : ''}
+      </div>
+      <span class="card-stock ${stockClass(p.stock)}">${stockLabel(p.stock)}</span>
+      ${p.badge ? `<span class="card-badge" style="position:relative;top:auto;left:auto;display:inline-block;margin-left:8px;">${p.badge}</span>` : ''}
+    </div>
+  `;
+
+  const specs = [];
+  if (p.material) specs.push(['材质', p.material]);
+  if (p.size) specs.push(['尺寸', p.size]);
+  if (p.color) specs.push(['颜色', p.color]);
+  if (p.origin) specs.push(['产地', p.origin]);
+
+  document.getElementById('modalBody').innerHTML = `
+    ${p.desc ? `<div class="modal-desc">${p.desc}</div>` : ''}
+    ${specs.length ? `<div class="modal-specs">${specs.map(([k,v]) => `
+      <div class="spec-item"><div class="spec-key">${k}</div><div class="spec-val">${v}</div></div>
+    `).join('')}</div>` : ''}
+  `;
+
+  document.getElementById('modalHeader').querySelectorAll('.modal-thumb').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      state.modalImgIdx = parseInt(thumb.dataset.idx);
+      renderModal();
+    });
+  });
+}
+
+document.getElementById('modalClose').addEventListener('click', () => {
+  document.getElementById('modalOverlay').classList.remove('open');
+});
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay'))
+    document.getElementById('modalOverlay').classList.remove('open');
+});
+
+// ══════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════
+function loadSettingsForm() {
+  document.getElementById('s_storeName').value = state.settings.storeName || '';
+  document.getElementById('s_tagline').value = state.settings.tagline || '';
+  document.getElementById('s_accent').value = state.settings.accent || '#F5A623';
+  document.getElementById('s_accentHex').value = state.settings.accent || '#F5A623';
+  document.getElementById('s_bg').value = state.settings.bg || '#0D1B2A';
+  document.getElementById('s_bgHex').value = state.settings.bg || '#0D1B2A';
+  document.getElementById('s_radius').value = state.settings.radius || 16;
+  document.getElementById('radiusLabel').textContent = (state.settings.radius || 16) + 'px';
+}
+
+document.getElementById('s_accent').addEventListener('input', e => {
+  document.getElementById('s_accentHex').value = e.target.value;
+});
+document.getElementById('s_accentHex').addEventListener('input', e => {
+  if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) document.getElementById('s_accent').value = e.target.value;
+});
+document.getElementById('s_bg').addEventListener('input', e => {
+  document.getElementById('s_bgHex').value = e.target.value;
+});
+document.getElementById('s_bgHex').addEventListener('input', e => {
+  if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) document.getElementById('s_bg').value = e.target.value;
+});
+document.getElementById('s_radius').addEventListener('input', e => {
+  document.getElementById('radiusLabel').textContent = e.target.value + 'px';
+});
+
+document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+  state.settings.storeName = document.getElementById('s_storeName').value.trim() || '产品展示';
+  state.settings.tagline = document.getElementById('s_tagline').value.trim();
+  state.settings.accent = document.getElementById('s_accent').value;
+  state.settings.bg = document.getElementById('s_bg').value;
+  state.settings.radius = parseInt(document.getElementById('s_radius').value);
+  save();
+  applyTheme();
+  toast('设定已储存');
+});
+
+// ══════════════════════════════════════════
+//  EXPORT / IMPORT / CLEAR
+// ══════════════════════════════════════════
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const data = JSON.stringify({ products: state.products, settings: state.settings }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'product-showcase.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('资料已汇出');
+});
+
+document.getElementById('importBtnTrig').addEventListener('click', () => {
+  document.getElementById('importInput').click();
+});
+
+document.getElementById('importInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.products) state.products = data.products;
+      if (data.settings) state.settings = Object.assign(state.settings, data.settings);
+      save();
+      applyTheme();
+      loadSettingsForm();
+      renderProductList();
+      toast('资料已汇入');
+    } catch { toast('档案格式错误', 'error'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  state.products = [];
+  state.selectedId = null;
+  save();
+  renderProductList();
+  document.getElementById('emptyFormState').style.display = '';
+  document.getElementById('editForm').style.display = 'none';
+  toast('全部资料已清除');
+});
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+load();
+applyTheme();
+renderProductList();
+</script>
+</body>
+</html>
